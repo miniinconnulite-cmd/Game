@@ -1,7 +1,8 @@
+
 import os from "os";
 import { Module, getCommands } from "../lib/plugins.js";
-import { getRandomPhoto } from "./bin/menu_img.js";
 import config from "../config.js";
+import { getMenuStyle, buildV1Menu, buildV2Menu } from "./setmenu.js";
 
 const readMore = String.fromCharCode(8206).repeat(4001);
 
@@ -25,11 +26,10 @@ function buildGroupedCommands() {
     }, {});
 }
 
-// ================== Rabbit-Style Menu with Channel Forward ==================
 Module({
   command: "menu",
   package: "general",
-  description: "Show all commands in Rabbit-style with channel forward",
+  description: "Show all commands with selected menu style"
 })(async (message, match) => {
   try {
     await message.react("📜");
@@ -41,56 +41,41 @@ Module({
     const usedGB = ((os.totalmem() - os.freemem()) / 1073741824).toFixed(2);
     const totGB = (os.totalmem() / 1073741824).toFixed(2);
     const ram = `${usedGB} / ${totGB} GB`;
+    const runtimeStr = runtime(process.uptime());
 
     const grouped = buildGroupedCommands();
-    const categories = Object.keys(grouped).sort();
-    let _cmd_st = "";
+    const chatId = message.from;
+    const menuStyle = getMenuStyle(chatId);
 
+    let menuText = "";
+    
+    // Si une catégorie spécifique est demandée
     if (match && grouped[match.toLowerCase()]) {
       const pack = match.toLowerCase();
-      _cmd_st += `\n *╭────❒ ${pack.toUpperCase()} ❒*\n`;
+      menuText += `\n*╭────❒ ${pack.toUpperCase()} ❒*\n`;
       grouped[pack].sort().forEach((cmdName) => {
-        _cmd_st += ` *├◈ ${cmdName}*\n`;
+        menuText += `*├◈ ${cmdName}*\n`;
       });
-      _cmd_st += ` *┕──────────────────❒*\n`;
+      menuText += `*┕──────────────────❒*\n`;
     } else {
-      _cmd_st += `
-╔〔 🧚‍♀️*Rᴀʙʙɪᴛ Xᴍᴅ Mɪɴɪ*💐〕╗
- *👋 Hᴇʟʟᴏ, Rᴀʙʙɪᴛ Xᴍᴅ Mɪɴɪ Usᴇʀ!*
-╚══════════════════════╝
-
-╭─「 *Cᴏᴍᴍᴀɴᴅ Pᴀɴᴇʟ* 」
-│🔹 *Rᴜɴ*     : ${runtime(process.uptime())}
-│🔹 *Mᴏᴅᴇ*    : Public
-│🔹 *Pʀᴇғɪx*  : ${config.prefix}
-│🔹 *Rᴀᴍ*     : ${ram}
-│🔹 *Tɪᴍᴇ*    : ${time}
-│🔹 *Uѕᴇʀ*    : ${userName}
-╰─────────────●●►
-${readMore}
-`;
-
-      for (const cat of categories) {
-        _cmd_st += `\n *╭────❒ ${cat.toUpperCase()} ❒*\n`;
-        grouped[cat].sort().forEach((cmdName) => {
-          _cmd_st += ` *├◈ ${cmdName}*\n`;
-        });
-        _cmd_st += ` *┕──────────────────❒*\n`;
+      // Construire le menu selon le style choisi
+      if (menuStyle === "v2") {
+        menuText = buildV2Menu(userName, runtimeStr, ram, time, config.prefix, grouped);
+      } else {
+        menuText = buildV1Menu(userName, runtimeStr, ram, time, config.prefix, grouped);
       }
-
-      _cmd_st += `\n *💐 𝐓ʜᴀɴᴋ 𝐘ᴏᴜ 𝐅ᴏʀ 𝐔sɪɴɢ 𝐑ᴀʙʙɪᴛ Xᴍᴅ 𝐁ᴏᴛ 💞*`;
     }
 
     const opts = {
-      image: { url: "https://www.rabbit.zone.id/pzf1km.jpg" },
-      caption: _cmd_st,
+      image: { url: "https://i.postimg.cc/XvsZgKCb/IMG-20250731-WA0527.jpg" },
+      caption: menuText,
       mimetype: "image/jpeg",
       contextInfo: {
         forwardingScore: 999,
         isForwarded: true,
         forwardedNewsletterMessageInfo: {
-          newsletterJid: "120363404737630340@newsletter",
-          newsletterName: "𝐑ᴀʙʙɪᴛ Xᴍᴅ",
+          newsletterJid: "120363403408693274@newsletter",
+          newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
           serverMessageId: 6,
         },
       },
