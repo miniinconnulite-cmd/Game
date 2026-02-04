@@ -16,7 +16,7 @@ Module({
 
   if (!match) {
     return message.send(
-      "❌ Number dao\n\nExample:\n.lookup 8420757226"
+      "❌ Number dao\n\nExample:\n.lookup 55440757226"
     );
   }
 
@@ -63,7 +63,7 @@ Module({
 ${JSON.stringify(api.result.result, null, 2)}
 
 ━━━━━━━━━━━━━━
-✨ Pᴏᴡᴇʀᴇᴅ Bʏ Mʀ Rᴀʙʙɪᴛ
+𝙼𝙰𝙳𝙴 𝙸𝙽 𝙱𝚈 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝙱𝙾𝚈
 `;
 
     await message.send(resultText);
