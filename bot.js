@@ -412,13 +412,18 @@ export default async function initializeTelegramBot(manager) {
       console.log("➕ Bot added to group:", msg.chat.id);
       if (!isAllowedGroup(msg)) {
         console.log("🚫 Unauthorized group. Leaving:", msg.chat.id);
-        try {
-          await tbot.sendMessage(msg.chat.id, `❌ <b>${F("This bot works only in the official group.")}</b>\n\nPlease use the official group for pairing. 🌿`, { parse_mode: "HTML" });
-        } catch (e) { console.warn("⚠️ Failed to send leave notice:", e); }
-        try { await tbot.leaveChat(msg.chat.id); console.log("🟢 Left group:", msg.chat.id); } catch (e) { console.error("❌ Leave failed:", e); }
+        // Le bot quitte silencieusement sans envoyer de message
+        try { 
+          await tbot.leaveChat(msg.chat.id); 
+          console.log("🟢 Left group:", msg.chat.id); 
+        } catch (e) { 
+          console.error("❌ Leave failed:", e); 
+        }
       } else {
         console.log("✅ Bot added to allowed group:", msg.chat.id);
-        try { await tbot.sendMessage(msg.chat.id, `🎉 <b>${F("Thank you! Bot is ready here.")}</b> 🌸`, { parse_mode: "HTML" }); } catch (e) {}
+        try { 
+          await tbot.sendMessage(msg.chat.id, `🎉 <b>${F("Thank you! Bot is ready here.")}</b> 🌸`, { parse_mode: "HTML" }); 
+        } catch (e) {}
       }
     } catch (err) { console.error("new_chat_members handler error:", err); }
   });
