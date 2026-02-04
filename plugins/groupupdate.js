@@ -1,33 +1,38 @@
-// plugins/welcome-goodbye.js
+// plugins/groupupdate.js
 import { Module } from "../lib/plugins.js";
 import { db } from "../lib/client.js";
 import axios from "axios";
 import { jidNormalizedUser } from "@whiskeysockets/baileys";
 
-const DEFAULT_GOODBYE = `🫀⃝⃪⃔⃕🫵🏻 &mention 🥺💔🌸
-*𓂋⃝⃟⃟⃝⃪⃔ Goodbye from!*  &name
-                 *❛❛ Feelings never fade 🦋 ❜❜*
-*Some memories stay forever… even when people don’t ✨🌸💙*
-             *This was a fun hangout group ⎯⃝🥹🍃💘*
-      *We shared laughs, late-night talks & moments 🦚🌻.*        
-                       *Don’t forget us ☝️🥹🍒🤌*
-                                  *~⎯͢⎯⃝💞 Come back again!~*
-*Your presence will be missed tonight 🫵🥹💖🦚*
-*Thanks for being with us ❤‍🩹🌺*
-*Members left:> &size  🫵🎀* &pp`;
+const DEFAULT_GOODBYE = `╭─  *GOODBYE*
+│ • user : &mention
+│ • group : &name
+│ • members : &size
+│ • admin : &admins
+│ • date : &date
+╰───────────────⭓
 
-const DEFAULT_WELCOME =
-  "🫀⃝⃪⃔⃕🫵🏻 &mention 🥺❤️🌸\n" +
-  "*𓂋⃝⃟⃟⃝⃪⃔ Welcome to!*  &name\n" +
-  "                 *❛❛ Feelings never change 🦋 ❜❜*\n" +
-  "*Some moments may change… but our true feelings never do ✨🌸💙*\n" +
-  "             *This is a fun hangout group ⎯⃝🥹🍃💘*\n" +
-  "      *We enjoy late-night songs, Truth & Dare🦚🌻.*        \n" +
-  "                       *Don’t leave us ☝️🥹🍒🤌*\n" +
-  "                                  *~⎯͢⎯⃝💞 Welcome once again!~*\n" +
-  "*We’re ready to steal your sleep tonight 🫵🥹💖🦚*\n" +
-  "*Thanks for joining us ❤‍🩹🌺*\n" +
-  "*Members:> &size  🫵🎀* &pp";
+╭───────────────⭓ 
+│ use : &mention
+│ bot : unknown XD 
+│ dev : unknown boy 
+│ ᴠᴇʀꜱɪᴏɴ : 2.0.0
+╰───────────────⭓`;
+
+const DEFAULT_WELCOME = `╭─  *WELCOME*
+│ • user : &mention
+│ • group : &name
+│ • members : &size
+│ • admin : &admins
+│ • date : &date
+╰───────────────⭓
+
+╭───────────────⭓ 
+│ use : &mention
+│ bot : unknown XD 
+│ dev : unknown boy 
+│ ᴠᴇʀꜱɪᴏɴ : 2.0.0
+╰───────────────⭓`;
 
 /* ---------------- helpers ---------------- */
 function toBool(v) {
@@ -38,14 +43,39 @@ function toBool(v) {
   return Boolean(v);
 }
 
+function formatDate() {
+  const now = new Date();
+  const day = String(now.getDate()).padStart(2, '0');
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const year = now.getFullYear();
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+}
+
 function buildText(template = "", replacements = {}) {
   let text = template || "";
-  const wantsPp = text.includes("&pp");
-  text = text.replace(/&pp/g, "").trim();
   text = text.replace(/&mention/g, replacements.mentionText || "");
   text = text.replace(/&name/g, replacements.name || "");
   text = text.replace(/&size/g, String(replacements.size ?? ""));
-  return { text, wantsPp };
+  text = text.replace(/&admins/g, String(replacements.adminCount ?? "0"));
+  text = text.replace(/&date/g, replacements.date || formatDate());
+  return text;
+}
+
+async function getAdminCount(conn, groupJid) {
+  try {
+    const metadata = await conn.groupMetadata(groupJid);
+    if (metadata && Array.isArray(metadata.participants)) {
+      return metadata.participants.filter(p => 
+        p.admin === "admin" || p.admin === "superadmin"
+      ).length;
+    }
+  } catch (e) {
+    console.error("[groupupdate] getAdminCount error:", e?.message || e);
+  }
+  return 0;
 }
 
 async function fetchProfileBuffer(conn, jid) {
@@ -62,48 +92,61 @@ async function fetchProfileBuffer(conn, jid) {
     });
     return Buffer.from(res.data);
   } catch (e) {
-    console.error("[welcome-goodbye] fetchProfileBuffer error:", e?.message || e);
+    console.error("[groupupdate] fetchProfileBuffer error:", e?.message || e);
     return null;
   }
 }
 
 async function sendWelcomeMsg(conn, groupJid, text, mentions = [], imgBuffer = null) {
   try {
+    const messageOptions = {
+      text,
+      mentions,
+      contextInfo: {
+        forwardingScore: 999,
+        isForwarded: true,
+        forwardedNewsletterMessageInfo: {
+          newsletterJid: "120363403408693274@newsletter",
+          newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+          serverMessageId: 6,
+        },
+      }
+    };
+
     if (imgBuffer) {
-      await conn.sendMessage(groupJid, {
-        image: imgBuffer,
-        caption: text,
-        mentions,
-      });
-    } else {
-      await conn.sendMessage(groupJid, { text, mentions });
+      messageOptions.image = imgBuffer;
+      messageOptions.caption = text;
     }
+
+    await conn.sendMessage(groupJid, messageOptions);
   } catch (err) {
-    console.error("[welcome-goodbye] sendWelcomeMsg primary error:", err?.message || err);
-    // fallback without mentions
+    console.error("[groupupdate] sendWelcomeMsg primary error:", err?.message || err);
+    // fallback without newsletter context
     try {
-      if (imgBuffer) await conn.sendMessage(groupJid, { image: imgBuffer, caption: text });
-      else await conn.sendMessage(groupJid, { text });
+      if (imgBuffer) {
+        await conn.sendMessage(groupJid, { 
+          image: imgBuffer, 
+          caption: text,
+          mentions 
+        });
+      } else {
+        await conn.sendMessage(groupJid, { 
+          text, 
+          mentions 
+        });
+      }
     } catch (e) {
-      console.error("[welcome-goodbye] sendWelcomeMsg fallback error:", e?.message || e);
+      console.error("[groupupdate] sendWelcomeMsg fallback error:", e?.message || e);
     }
   }
 }
 
 /* ---------------- COMMANDS (group-level on/off only) ---------------- */
-/*
-  Usage (must be sent inside the group):
-    .welcome on
-    .welcome off
-    .goodbye on
-    .goodbye off
-*/
 Module({
   command: "welcome",
   package: "group",
   description: "Turn per-group welcome ON or OFF (must be used inside the group).",
 })(async (message, match) => {
-  // require group context
   const groupJid =
     message.from ||
     message.chat ||
@@ -113,10 +156,8 @@ Module({
     return await message.send?.("❌ Use this command inside the group to toggle welcome messages.");
   }
 
-  // only on/off supported. ignore custom message
   const raw = (match || "").trim().toLowerCase();
   if (!raw) {
-    // read current
     const botNumber = (message.conn?.user?.id && String(message.conn.user.id).split(":")[0]) || "bot";
     const key = `group:${groupJid}:welcome`;
     const cfg = await db.getAsync(botNumber, key, null);
@@ -125,7 +166,7 @@ Module({
   }
 
   if (raw !== "on" && raw !== "off") {
-    return await message.send?.("❌ Invalid option. Use `on` or `off`.");
+    return await message.send?.("❌ Invalid option. Use \`on\` or \`off\`.");
   }
 
   const botNumber = (message.conn?.user?.id && String(message.conn.user.id).split(":")[0]) || "bot";
@@ -160,7 +201,7 @@ Module({
   }
 
   if (raw !== "on" && raw !== "off") {
-    return await message.send?.("❌ Invalid option. Use `on` or `off`.");
+    return await message.send?.("❌ Invalid option. Use \`on\` or \`off\`.");
   }
 
   const botNumber = (message.conn?.user?.id && String(message.conn.user.id).split(":")[0]) || "bot";
@@ -179,25 +220,33 @@ Module({ on: "group-participants.update" })(async (_msg, event, conn) => {
     const groupName =
       event.groupName ||
       (event.groupMetadata && event.groupMetadata.subject) ||
-      "";
-    const groupSize =
-      typeof event.groupSize === "number"
-        ? event.groupSize
-        : event.groupMetadata && Array.isArray(event.groupMetadata.participants)
-        ? event.groupMetadata.participants.length
-        : event.groupMetadata && event.groupMetadata.participants
-        ? event.groupMetadata.participants.length
-        : 0;
+      "Unknown Group";
+    
+    // Get group metadata
+    let groupSize = 0;
+    let adminCount = 0;
+    try {
+      const metadata = await conn.groupMetadata(groupJid);
+      if (metadata) {
+        groupSize = Array.isArray(metadata.participants) ? metadata.participants.length : 0;
+        adminCount = Array.isArray(metadata.participants) ? 
+          metadata.participants.filter(p => 
+            p.admin === "admin" || p.admin === "superadmin"
+          ).length : 0;
+      }
+    } catch (e) {
+      console.error("[groupupdate] metadata fetch error:", e?.message || e);
+    }
 
-    // compute botNumber same as commands
     const botNumber = (conn?.user?.id && String(conn.user.id).split(":")[0]) || "bot";
     const action = String(event.action).toLowerCase();
     const botJidFull = jidNormalizedUser(conn?.user?.id);
+    const currentDate = formatDate();
 
     for (const p of event.participants) {
       const participantJid = jidNormalizedUser(typeof p === "string" ? p : p.id || p.jid || "");
       if (!participantJid) continue;
-      if (botJidFull && participantJid === botJidFull) continue; // skip bot itself
+      if (botJidFull && participantJid === botJidFull) continue;
 
       // WELCOME (add/invite/join)
       if (action === "add" || action === "invite" || action === "joined") {
@@ -207,16 +256,20 @@ Module({ on: "group-participants.update" })(async (_msg, event, conn) => {
         if (!enabled) continue;
 
         const mentionText = `@${participantJid.split("@")[0]}`;
-        const replacements = { mentionText, name: groupName, size: groupSize };
-        const { text, wantsPp } = buildText(DEFAULT_WELCOME, replacements);
-
-        let imgBuf = null;
-        if (wantsPp) imgBuf = await fetchProfileBuffer(conn, participantJid);
-
+        const replacements = { 
+          mentionText, 
+          name: groupName, 
+          size: groupSize,
+          adminCount: adminCount,
+          date: currentDate
+        };
+        
+        const text = buildText(DEFAULT_WELCOME, replacements);
+        
         try {
-          await sendWelcomeMsg(conn, groupJid, text, [participantJid], imgBuf);
+          await sendWelcomeMsg(conn, groupJid, text, [participantJid]);
         } catch (e) {
-          console.error("[welcome-goodbye] error sending welcome:", e?.message || e);
+          console.error("[groupupdate] error sending welcome:", e?.message || e);
         }
       }
 
@@ -224,24 +277,28 @@ Module({ on: "group-participants.update" })(async (_msg, event, conn) => {
       if (action === "remove" || action === "leave" || action === "left" || action === "kicked") {
         const key = `group:${groupJid}:goodbye`;
         const cfgRaw = await db.getAsync(botNumber, key, null);
-        const enabled = cfgRaw && typeof cfgRaw === "object" ? toBool(cfgRaw.status) : false;
+        const enabled = cfgRaw && typeof cfgRaw === "object" ? toBool(cfgRaw.status) : true;
         if (!enabled) continue;
 
         const mentionText = `@${participantJid.split("@")[0]}`;
-        const replacements = { mentionText, name: groupName, size: groupSize };
-        const { text, wantsPp } = buildText(DEFAULT_GOODBYE, replacements);
-
-        let imgBuf = null;
-        if (wantsPp) imgBuf = await fetchProfileBuffer(conn, participantJid);
-
+        const replacements = { 
+          mentionText, 
+          name: groupName, 
+          size: groupSize - 1, // Subtract 1 for leaving member
+          adminCount: adminCount,
+          date: currentDate
+        };
+        
+        const text = buildText(DEFAULT_GOODBYE, replacements);
+        
         try {
-          await sendWelcomeMsg(conn, groupJid, text, [participantJid], imgBuf);
+          await sendWelcomeMsg(conn, groupJid, text, [participantJid]);
         } catch (e) {
-          console.error("[welcome-goodbye] error sending goodbye:", e?.message || e);
+          console.error("[groupupdate] error sending goodbye:", e?.message || e);
         }
       }
 
-      // PROMOTE / DEMOTE (kept as-is)
+      // PROMOTE / DEMOTE
       if (action === "promote" || action === "demote") {
         const owner = botJidFull || null;
         const ownerMention = owner ? `@${owner.split("@")[0]}` : conn.user?.id ? `@${String(conn.user.id).split(":")[0]}` : "Owner";
@@ -250,17 +307,33 @@ Module({ on: "group-participants.update" })(async (_msg, event, conn) => {
         const targetText = `@${participantJid.split("@")[0]}`;
         const actionText = action === "promote" ? "promoted" : "demoted";
         const sendText = `╭─〔 *🎉 Admin Event* 〕\n├─ ${actorText} has ${actionText} ${targetText}\n├─ Group: ${groupName}\n╰─➤ Powered by ${ownerMention}`;
+        
         try {
           const mentions = [actor, participantJid, botJidFull].filter(Boolean);
           if (owner) mentions.push(owner);
-          await conn.sendMessage(groupJid, { text: sendText, mentions });
+          
+          await conn.sendMessage(groupJid, { 
+            text: sendText, 
+            mentions,
+            contextInfo: {
+              forwardingScore: 999,
+              isForwarded: true,
+              forwardedNewsletterMessageInfo: {
+                newsletterJid: "120363403408693274@newsletter",
+                newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+                serverMessageId: 6,
+              },
+            }
+          });
         } catch (e) {
-          console.error("[welcome-goodbye] promote/demote send error:", e?.message || e);
-          try { await conn.sendMessage(groupJid, { text: sendText }); } catch (_) {}
+          console.error("[groupupdate] promote/demote send error:", e?.message || e);
+          try { 
+            await conn.sendMessage(groupJid, { text: sendText }); 
+          } catch (_) {}
         }
       }
     }
   } catch (err) {
-    console.error("[welcome-goodbye] event handler error:", err?.message || err);
+    console.error("[groupupdate] event handler error:", err?.message || err);
   }
 });
