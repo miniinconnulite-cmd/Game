@@ -41,7 +41,7 @@ Module({
 🆔 *Group ID:*
 \`${id}\`
 
-_Powered By Rabbit Xmd Mini_
+_𝙼𝙰𝙳𝙴 𝙸𝙽 𝙱𝚈 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝙱𝙾𝚈_
 `.trim());
     }
 
@@ -63,7 +63,7 @@ _Powered By Rabbit Xmd Mini_
 🆔 *Channel ID:*
 \`${id}\`
 
-_Powered By Rabbit Xmd Mini_
+_𝙼𝙰𝙳𝙴 𝙸𝙽 𝙱𝚈 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝙱𝙾𝚈_
 `.trim());
     }
 
