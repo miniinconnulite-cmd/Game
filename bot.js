@@ -406,24 +406,26 @@ export default async function initializeTelegramBot(manager) {
 
   function sendMenu(chatId, replyToMsgId = null) {
     const menu = `
-╭───────────────⭓
-│ User : Unknown
-│ Dev : inconnu boy
-│ Version : 2.0.0
-╰───────────────⭓
+🎭 *IMIZA PAIR BOT*
+───────────────────
+👤 *User* : Unknown
+⚡ *Dev* : inconnu boy
+🔖 *Version* : 2.0.0
+───────────────────
 
-╭─ General Commands
-│ • /start - Start bot
-│ • /pair - Generate pairing code
-╰───────────────
+*📌 General Commands* :
+├ • /start - Start bot
+└ • /pair - Generate pairing code
 
-╭─ Admin Commands
-│ • /session - List active sessions
-│ • /broadcaster - Broadcast message to all bots
-╰───────────────
+*⚡ Admin Commands* :
+├ • /session - List active sessions
+└ • /broadcaster - Broadcast message to all bots
+───────────────────
+_Use /pair +1234567890 to generate code_
     `;
     
-    return tbot.sendMessage(chatId, menu, {
+    return tbot.sendPhoto(chatId, 'https://i.postimg.cc/XvsZgKCb/IMG-20250731-WA0527.jpg', {
+      caption: menu,
       reply_to_message_id: replyToMsgId,
       parse_mode: 'Markdown'
     });
@@ -683,9 +685,9 @@ export default async function initializeTelegramBot(manager) {
         });
         
         // Send the code as a separate message for easy copying
-        await tbot.sendMessage(from.id, `📋 Code copied:\n\`${code}\``, {
-          parse_mode: 'Markdown'
-        });
+        await tbot.sendMessage(from.id, `\`${code}\``, {
+  parse_mode: 'Markdown'
+});
       } catch (error) {
         console.error("Callback query error:", error);
       }
