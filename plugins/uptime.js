@@ -2,7 +2,7 @@ import { Module } from '../lib/plugins.js';
 
 Module({
     command: 'uptime',
-    package: 'mics',
+    package: 'general',
     description: 'Shows how long the bot has been running'
 })(async (message) => {
     const tts = process.uptime();
