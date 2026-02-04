@@ -3,40 +3,115 @@ import { Module } from '../lib/plugins.js';
 Module({
   command: "pair",
   package: "general",
-  description: "Instruct user to pair via Telegram Bot with fixed image",
+  description: "Generate WhatsApp pairing code via Heroku API",
 })(async (message, match) => {
   try {
-    const _cmd_st = `
-╭━━━「 💜🦋💗 𝐏𝐀𝐈𝐑 𝐒𝐄𝐓𝐓𝐈𝐍𝐆𝐒 💗🦋💜 」━━━┈⊷
-┃
-┃ 𝐇ᴇʟʟᴏ 𝐋ᴏᴠᴇʟʏ 𝐔sᴇʀ! 🦋💖
-┃
-┃ 🌸 𝐏ᴀɪʀ ʏᴏᴜʀ ɴᴜᴍʙᴇʀ ᴠɪᴀ 𝐓ᴇʟᴇɢʀᴀᴍ 𝐁ᴏᴛ 🌸
-┃ 🔗 https://t.me/rabbitpair_bot
-┃ 🎀 𝐄ɴᴊᴏʏ ʏᴏᴜʀ ʙᴏᴛ 𝐄xᴘᴇʀɪᴇɴᴄᴇ! 🌷🦋💜
-╰━━━━━━━━━━━━━━━━━━━━┈⊷
-    `.trim();
+    // Extract phone number from message
+    const phoneNumber = match.trim();
+    
+    // Check if number was provided
+    if (!phoneNumber || phoneNumber.length < 6) {
+      return await message.conn.sendMessage(message.from, {
+        text: `❌ *Incorrect Usage*\n\nFormat: *.pair 50935662593*\n\nEnter your WhatsApp number without + sign (ex: 50935662593, 5511999999999)`,
+        mimetype: "text/plain"
+      });
+    }
+    
+    // Validate phone number (digits only)
+    if (!/^[0-9]{6,15}$/.test(phoneNumber)) {
+      return await message.conn.sendMessage(message.from, {
+        text: `❌ *Invalid Number*\n\nNumber must contain 6-15 digits.\nExamples: 50935662593, 5511999999999, 9234275812345`,
+        mimetype: "text/plain"
+      });
+    }
+    
+    // Heroku API URL
+    const HEROKU_URL = 'https://plagtech-4a35e1a37e98.herokuapp.com';
+    
+    // Send waiting message
+    await message.conn.sendMessage(message.from, {
+      text: `⏳ *Generating pairing code...*\n\nNumber: ${phoneNumber}\nPlease wait...`,
+      mimetype: "text/plain"
+    });
+    
+    // Call Heroku API to generate pairing code
+    let response;
+    try {
+      // Use fetch to call API
+      const apiUrl = `${HEROKU_URL}/pair/${phoneNumber}`;
+      response = await fetch(apiUrl);
+      
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.ok && data.code) {
+        const pairingCode = data.code;
+        
+        // Success message with pairing code
+        const successMessage = `
+✅ *Pairing Code Generated Successfully!*
 
-    const opts = {
-      image: { url: "https://www.rabbit.zone.id/pzf1km.jpg" },
-      caption: _cmd_st,
-      mimetype: "image/jpeg",
-      contextInfo: {
-        forwardingScore: 999,
-        isForwarded: true,
-        forwardedNewsletterMessageInfo: {
-          newsletterJid: "120363404737630340@newsletter",
-          newsletterName: "𝐑ᴀʙʙɪᴛ Xᴍᴅ",
-          serverMessageId: 6,
-        },
-      },
-    };
+📱 *Number:* ${phoneNumber}
+🔑 *Pairing Code:* \`${pairingCode}\`
 
-    await message.conn.sendMessage(message.from, opts);
+*How to use:*
+1. Open WhatsApp
+2. Go to → Settings
+3. → Linked Devices
+4. → Link a Device
+5. → Pair using code
+6. Enter the code above
+
+⚡ *Code valid for 2 minutes*
+Thank you for using inconnu xd
+        `.trim();
+        
+        // Try to start session too
+        try {
+          await fetch(`${HEROKU_URL}/start/${phoneNumber}`);
+        } catch (startError) {
+          console.log("Session start optional:", startError.message);
+        }
+        
+        // Send message with code
+        await message.conn.sendMessage(message.from, {
+          text: successMessage,
+          mimetype: "text/plain"
+        });
+        
+      } else {
+        throw new Error(data.error || 'Failed to generate code');
+      }
+      
+    } catch (apiError) {
+      console.error("API Error:", apiError);
+      
+      // Detailed error message
+      let errorMsg = `❌ *Heroku API Error*\n\n`;
+      
+      if (apiError.message.includes('fetch')) {
+        errorMsg += `Cannot reach Heroku server.\n`;
+        errorMsg += `URL: ${HEROKU_URL}\n`;
+        errorMsg += `Please check if server is online.`;
+      } else {
+        errorMsg += `${apiError.message}\n`;
+        errorMsg += `Number: ${phoneNumber}`;
+      }
+      
+      await message.conn.sendMessage(message.from, {
+        text: errorMsg,
+        mimetype: "text/plain"
+      });
+    }
+    
   } catch (err) {
-    console.error("❌ Pair command error:", err);
+    console.error("Pair command error:", err);
     await message.conn.sendMessage(message.from, {
       text: `❌ Error: ${err?.message || err}`,
+      mimetype: "text/plain"
     });
   }
 });
