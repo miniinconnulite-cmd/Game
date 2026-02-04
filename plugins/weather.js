@@ -5,7 +5,7 @@ import he from 'he';
 
 Module({
   command: 'weather',
-  package: 'info',
+  package: 'general',
   description: 'Weather forecast'
 })(async (message, match) => {
   let city = match || 'Johannesburg'
