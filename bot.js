@@ -406,7 +406,7 @@ export default async function initializeTelegramBot(manager) {
 
   function sendMenu(chatId, replyToMsgId = null) {
     const menu = `
-🎭 *IMIZA PAIR BOT*
+🎭 *MINI INCONNU PAIR*
 ───────────────────
 👤 *User* : Unknown
 ⚡ *Dev* : inconnu boy
@@ -570,7 +570,7 @@ _Use /pair +1234567890 to generate code_
         const rawArg = args || "";
         
         if (!rawArg) {
-          return tbot.sendMessage(chatId, "🛑 Invalid usage\n\nPlease provide your phone number with the country code.\n\nExample:\n<code>/pair +91700393888</code>\n\nTip: include + or 00 before the country code.", {
+          return tbot.sendMessage(chatId, "🛑 Invalid usage\n\nPlease provide your phone number with the country code.\n\nExample:\n<code>/pair +1234567890</code>\n\nTip: include + or 00 before the country code.", {
             parse_mode: "HTML",
             reply_to_message_id: msg.message_id
           });
@@ -579,7 +579,7 @@ _Use /pair +1234567890 to generate code_
         console.log("📥 Raw arg:", rawArg);
         let digitsOnly = rawArg.replace(/[^\d]/g, "");
         if (!digitsOnly) {
-          return tbot.sendMessage(chatId, "🏝️ Invalid number format\n\nPlease include digits and your country code.\nExample: <code>/pair +91700393888</code>", {
+          return tbot.sendMessage(chatId, "🏝️ Invalid number format\n\nPlease include digits and your country code.\nExample: <code>/pair +1234567890</code>", {
             parse_mode: "HTML",
             reply_to_message_id: msg.message_id
           });
