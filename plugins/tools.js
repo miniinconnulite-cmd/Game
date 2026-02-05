@@ -36,21 +36,50 @@ Module({
       if (input === "on") db.setHot(botNumber, key, true);
       else db.delHot(botNumber, key);
       await message.react("✅");
-      return await message.send(
-        `✅ *Auto status view is now \`${input.toUpperCase()}\`*`
-      );
+      return await message.send({
+        text: `✅ *Auto status view is now \`${input.toUpperCase()}\`*`,
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     } catch (e) {
       await message.react("❌");
-      return await message.send("❌ *Error updating auto status view*");
+      return await message.send({
+        text: "❌ *Error updating auto status view*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     }
   }
 
   const status = db.get(botNumber, key, false) === true;
-  return await message.send(
-    `⚙️ *Auto Status View*\n> Status: ${
+  return await message.send({
+    text: `⚙️ *Auto Status View*\n> Status: ${
       status ? "✅ ON" : "❌ OFF"
-    }\n\nUse:\n• astatus on\n• astatus off`
-  );
+    }\n\nUse:\n• astatus on\n• astatus off`,
+    contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363403408693274@newsletter",
+        newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+        serverMessageId: 6,
+      },
+    }
+  });
 });
 
 // 🔹 Auto Typing
@@ -72,21 +101,50 @@ Module({
       if (input === "on") db.setHot(botNumber, key, true);
       else db.delHot(botNumber, key);
       await message.react("✅");
-      return await message.send(
-        `✅ *Auto typing is now \`${input.toUpperCase()}\`*`
-      );
+      return await message.send({
+        text: `✅ *Auto typing is now \`${input.toUpperCase()}\`*`,
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     } catch (e) {
       await message.react("❌");
-      return await message.send("❌ *Error updating auto typing*");
+      return await message.send({
+        text: "❌ *Error updating auto typing*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     }
   }
 
   const status = db.get(botNumber, key, false) === true;
-  return await message.send(
-    `⚙️ *Auto Typing*\n> Status: ${
+  return await message.send({
+    text: `⚙️ *Auto Typing*\n> Status: ${
       status ? "✅ ON" : "❌ OFF"
-    }\n\nUse:\n• autotyping on\n• autotyping off`
-  );
+    }\n\nUse:\n• autotyping on\n• autotyping off`,
+    contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363403408693274@newsletter",
+        newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+        serverMessageId: 6,
+      },
+    }
+  });
 });
 
 // 🔹 Auto Recording
@@ -108,21 +166,50 @@ Module({
       if (input === "on") db.setHot(botNumber, key, true);
       else db.delHot(botNumber, key);
       await message.react("✅");
-      return await message.send(
-        `✅ *Auto record is now \`${input.toUpperCase()}\`*`
-      );
+      return await message.send({
+        text: `✅ *Auto record is now \`${input.toUpperCase()}\`*`,
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     } catch (e) {
       await message.react("❌");
-      return await message.send("❌ *Error updating auto record*");
+      return await message.send({
+        text: "❌ *Error updating auto record*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     }
   }
 
   const status = db.get(botNumber, key, false) === true;
-  return await message.send(
-    `🎤 *Auto Record*\n> Status: ${
+  return await message.send({
+    text: `🎤 *Auto Record*\n> Status: ${
       status ? "✅ ON" : "❌ OFF"
-    }\n\nUse:\n• autorecord on\n• autorecord off`
-  );
+    }\n\nUse:\n• autorecord on\n• autorecord off`,
+    contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363403408693274@newsletter",
+        newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+        serverMessageId: 6,
+      },
+    }
+  });
 });
 
 // 🔹 Auto React to Messages
@@ -144,21 +231,50 @@ Module({
       if (input === "on") db.setHot(botNumber, key, true);
       else db.delHot(botNumber, key);
       await message.react("✅");
-      return await message.send(
-        `✅ *AutoReact is now \`${input.toUpperCase()}\`*`
-      );
+      return await message.send({
+        text: `✅ *AutoReact is now \`${input.toUpperCase()}\`*`,
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     } catch (e) {
       await message.react("❌");
-      return await message.send("❌ *Error updating AutoReact*");
+      return await message.send({
+        text: "❌ *Error updating AutoReact*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     }
   }
 
   const status = db.get(botNumber, key, false) === true;
-  return await message.send(
-    `⚙️ *AutoReact*\n> Status: ${
+  return await message.send({
+    text: `⚙️ *AutoReact*\n> Status: ${
       status ? "✅ ON" : "❌ OFF"
-    }\n\nUse:\n• autoreact on\n• autoreact off`
-  );
+    }\n\nUse:\n• autoreact on\n• autoreact off`,
+    contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363403408693274@newsletter",
+        newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+        serverMessageId: 6,
+      },
+    }
+  });
 });
 
 // 🔹 Anti Call
@@ -180,21 +296,50 @@ Module({
       if (input === "on") db.setHot(botNumber, key, true);
       else db.delHot(botNumber, key);
       await message.react("✅");
-      return await message.send(
-        `✅ *AntiCall is now \`${input.toUpperCase()}\`*`
-      );
+      return await message.send({
+        text: `✅ *AntiCall is now \`${input.toUpperCase()}\`*`,
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     } catch (e) {
       await message.react("❌");
-      return await message.send("❌ *Error updating AntiCall*");
+      return await message.send({
+        text: "❌ *Error updating AntiCall*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     }
   }
 
   const status = db.get(botNumber, key, false) === true;
-  return await message.send(
-    `⚙️ *AntiCall*\n> Status: ${
+  return await message.send({
+    text: `⚙️ *AntiCall*\n> Status: ${
       status ? "✅ ON" : "❌ OFF"
-    }\n\nUse:\n• anticall on\n• anticall off`
-  );
+    }\n\nUse:\n• anticall on\n• anticall off`,
+    contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363403408693274@newsletter",
+        newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+        serverMessageId: 6,
+      },
+    }
+  });
 });
 
 // 🔹 Auto Read
@@ -216,62 +361,51 @@ Module({
       if (input === "on") db.setHot(botNumber, key, true);
       else db.delHot(botNumber, key);
       await message.react("✅");
-      return await message.send(
-        `✅ *AutoRead is now \`${input.toUpperCase()}\`*`
-      );
+      return await message.send({
+        text: `✅ *AutoRead is now \`${input.toUpperCase()}\`*`,
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     } catch (e) {
       await message.react("❌");
-      return await message.send("❌ *Error updating AutoRead*");
+      return await message.send({
+        text: "❌ *Error updating AutoRead*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     }
   }
 
   const status = db.get(botNumber, key, false) === true;
-  return await message.send(
-    `⚙️ *AutoRead*\n> Status: ${
+  return await message.send({
+    text: `⚙️ *AutoRead*\n> Status: ${
       status ? "✅ ON" : "❌ OFF"
-    }\n\nUse:\n• autoread on\n• autoread off`
-  );
-});
-/*
-// 🔹 Save Status
-Module({
-  command: "savestatus",
-  package: "owner",
-  description: "Toggle auto save viewed statuses",
-})(async (message, match) => {
-  if (!message.isFromMe) return message.send(theme.isfromMe);
-  const botNumber = resolveBotNumber(message.conn);
-  if (!botNumber) return message.send("❌ Bot number not found.");
-
-  const input = match?.trim().toLowerCase();
-  const key = "save_status";
-
-  if (input === "on" || input === "off") {
-    await message.react("⏳");
-    try {
-      if (input === "on") db.setHot(botNumber, key, true);
-      else db.delHot(botNumber, key);
-      await message.react("✅");
-      return await message.send(
-        `✅ *AutoSave Status is now \`${input.toUpperCase()}\`*`
-      );
-    } catch (e) {
-      await message.react("❌");
-      return await message.send("❌ *Error updating AutoSave Status*");
+    }\n\nUse:\n• autoread on\n• autoread off`,
+    contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363403408693274@newsletter",
+        newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+        serverMessageId: 6,
+      },
     }
-  }
-
-  const status = db.get(botNumber, key, false) === true;
-  return await message.send(
-    `⚙️ *AutoSave Status*\n> Status: ${
-      status ? "✅ ON" : "❌ OFF"
-    }\n\nUse:\n• savestatus on\n• savestatus off`
-  );
+  });
 });
-*/
-
-
-
 
 Module({
   command: "mode",
@@ -296,22 +430,51 @@ Module({
       }
 
       await message.react("✅");
-      return message.send(
-        `✅ *Bot mode set to* \`${input.toUpperCase()}\``
-      );
+      return message.send({
+        text: `✅ *Bot mode set to* \`${input.toUpperCase()}\``,
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     } catch (err) {
       await message.react("❌");
-      return message.send("❌ *Failed to update bot mode*");
+      return message.send({
+        text: "❌ *Failed to update bot mode*",
+        contextInfo: {
+          forwardingScore: 999,
+          isForwarded: true,
+          forwardedNewsletterMessageInfo: {
+            newsletterJid: "120363403408693274@newsletter",
+            newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+            serverMessageId: 6,
+          },
+        }
+      });
     }
   }
 
   const isPublic = db.get(botNumber, key, true) === true;
 
-  return message.send(
-    `⚙️ *Bot Mode*\n` +
+  return message.send({
+    text: `⚙️ *Bot Mode*\n` +
     `> Status: ${isPublic ? "🌍 PUBLIC" : "🔒 PRIVATE"}\n\n` +
     `*Usage:*\n` +
     `• mode public\n` +
-    `• mode private`
-  );
+    `• mode private`,
+    contextInfo: {
+      forwardingScore: 999,
+      isForwarded: true,
+      forwardedNewsletterMessageInfo: {
+        newsletterJid: "120363403408693274@newsletter",
+        newsletterName: "𝙼𝙸𝙽𝙸 𝙸𝙽𝙲𝙾𝙽𝙽𝚄 𝚇𝙳",
+        serverMessageId: 6,
+      },
+    }
+  });
 });
