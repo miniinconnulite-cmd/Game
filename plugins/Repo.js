@@ -7,7 +7,7 @@ Module({
 })(async (message, match) => {
   try {
     const repoText = `
-🤖 *Rabbit MD Bot Repository*
+🤖 *INCONNU XD Bot Repository*
 
 🌐 *GitHub Repository:*
 https://github.com/INCONNU-BOY/INCONNU-XD-V2
