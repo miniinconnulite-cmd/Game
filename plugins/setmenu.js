@@ -1,3 +1,5 @@
+plugins/setmenu.js
+
 import { Module } from "../lib/plugins.js";
 import config from "../config.js";
 
@@ -17,8 +19,8 @@ Module({
       return await message.reply(
         `❌ *Invalid menu style!*\n\n` +
         `*Usage:* ${config.prefix}setmenu v1 or ${config.prefix}setmenu v2\n\n` +
-        `*v1:* Classic vertical layout\n` +
-        `*v2:* Compact horizontal layout`
+        `*v1:* Compact horizontal layout\n` +
+        `*v2:* Classic vertical layout`
       );
     }
     
@@ -47,8 +49,36 @@ export function getMenuStyle(chatId) {
   return userMenuPreferences.get(chatId) || "v1";
 }
 
-// Fonction pour v1 menu
+// Fonction pour v1 menu (maintenant le menu compact horizontal)
 export function buildV1Menu(userName, runtimeStr, ram, time, prefix, groupedCommands) {
+  let menu = `
+╭───────────────⭓
+│ Rᴜɴ : ${runtimeStr}
+│ Uѕᴇʀ : ${userName}
+│ Tɪᴍᴇ : ${time}
+│ Mᴏᴅᴇ : Public
+│ ᴠᴇʀꜱɪᴏɴ : 2.0.0
+╰───────────────⭓\n`;
+
+  const categories = Object.keys(groupedCommands).sort();
+  
+  for (const cat of categories) {
+    const commandCount = groupedCommands[cat].length;
+    const icon = commandCount > 3 ? "👥" : "📌";
+    
+    menu += `\n╭─${icon} ${cat.toUpperCase()}\n`;
+    groupedCommands[cat].sort().forEach((cmdName) => {
+      menu += `│ • ${cmdName}\n`;
+    });
+    menu += `╰───────────────⭓\n`;
+  }
+
+  menu += `\n*ᴍɪɴɪ ɪɴᴄᴏɴɴᴜ xᴅ ʙᴏᴛ*`;
+  return menu;
+}
+
+// Fonction pour v2 menu (maintenant le menu classique vertical)
+export function buildV2Menu(userName, runtimeStr, ram, time, prefix, groupedCommands) {
   let menu = `
 ╭───────────────⭓
 │  👋 ʜᴇʟʟᴏ ${userName}
@@ -72,34 +102,6 @@ export function buildV1Menu(userName, runtimeStr, ram, time, prefix, groupedComm
       menu += `│ ⬡ ${cmdName}\n`;
     });
     menu += `╰──────────────────⭓\n`;
-  }
-
-  menu += `\n*ᴍɪɴɪ ɪɴᴄᴏɴɴᴜ xᴅ ʙᴏᴛ*`;
-  return menu;
-}
-
-// Fonction pour v2 menu
-export function buildV2Menu(userName, runtimeStr, ram, time, prefix, groupedCommands) {
-  let menu = `
-╭───────────────⭓
-│ Rᴜɴ : ${runtimeStr}
-│ Uѕᴇʀ : ${userName}
-│ Tɪᴍᴇ : ${time}
-│ Mᴏᴅᴇ : Public
-│ ᴠᴇʀꜱɪᴏɴ : 2.0.0
-╰───────────────⭓\n`;
-
-  const categories = Object.keys(groupedCommands).sort();
-  
-  for (const cat of categories) {
-    const commandCount = groupedCommands[cat].length;
-    const icon = commandCount > 3 ? "👥" : "📌";
-    
-    menu += `\n╭─${icon} ${cat.toUpperCase()}\n`;
-    groupedCommands[cat].sort().forEach((cmdName) => {
-      menu += `│ • ${cmdName}\n`;
-    });
-    menu += `╰───────────────⭓\n`;
   }
 
   menu += `\n*ᴍɪɴɪ ɪɴᴄᴏɴɴᴜ xᴅ ʙᴏᴛ*`;
