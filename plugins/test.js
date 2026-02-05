@@ -176,7 +176,7 @@ Module({
 
 Module({
   command: "vv",
-  package: "view-once",
+  package: "owner",
   description: "View once media (view and download)",
 })(async (message) => {
   try {
@@ -277,7 +277,7 @@ Module({
 
 Module({
   command: "vv2",
-  package: "view-once",
+  package: "owner",
   description: "View once media (view and download)",
 })(async (message) => {
   try {
@@ -382,8 +382,8 @@ Module({
 });
 
 Module({
-  command: "😂",
-  package: "view-once",
+  command: "vvdm",
+  package: "owner",
   description: "View once media (view and download)",
 })(async (message) => {
   try {
@@ -487,8 +487,8 @@ Module({
 });
 
 Module({
-  command: "😀",
-  package: "view-once",
+  command: "vv3",
+  package: "owner",
   description: "View once media (view and download)",
 })(async (message) => {
   try {
