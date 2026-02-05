@@ -4,38 +4,38 @@ import { db } from "../lib/client.js";
 import axios from "axios";
 import { jidNormalizedUser } from "@whiskeysockets/baileys";
 
-const DEFAULT_GOODBYE = `╭─  *GOODBYE*
-│ • user : &mention
-│ • group : &name
-│ • members : &size
-│ • admin : &admins
-│ • date : &date
-╰───────────────⭓
-
+const DEFAULT_GOODBYE = `
 ╭───────────────⭓ 
-│ use : &mention
 │ bot : inconnu xd
 │ dev : inconnu boy
 │ ᴠᴇʀꜱɪᴏɴ : 2.0.0
-╰───────────────⭓`;
+╰───────────────⭓
 
-const DEFAULT_WELCOME = `╭─  *WELCOME*
+╭─  *GOODBYE*
 │ • user : &mention
 │ • group : &name
 │ • members : &size
 │ • admin : &admins
 │ • date : &date
-╰───────────────⭓
-
-╭───────────────⭓ 
-│ use : &mention
-│ bot : inconnu xd
-│ dev : inconnu boy 
-│ ᴠᴇʀꜱɪᴏɴ : 2.0.0
 ╰───────────────⭓`;
 
-// URL de l'image par défaut
-const DEFAULT_PROFILE_IMAGE = "https://i.postimg.cc/XvsZgKCb/IMG-20250731-WA0527.jpg";
+const DEFAULT_WELCOME = `
+╭───────────────⭓ 
+│ bot : inconnu xd
+│ dev : inconnu boy
+│ ᴠᴇʀꜱɪᴏɴ : 2.0.0
+╰───────────────⭓
+
+╭─  *WELCOME*
+│ • user : &mention
+│ • group : &name
+│ • members : &size
+│ • admin : &admins
+│ • date : &date
+╰───────────────⭓`;
+
+// URL de l'image du bot
+const BOT_IMAGE = "https://i.postimg.cc/XvsZgKCb/IMG-20250731-WA0527.jpg";
 
 /* ---------------- helpers ---------------- */
 function toBool(v) {
@@ -81,51 +81,16 @@ async function getAdminCount(conn, groupJid) {
   return 0;
 }
 
-async function fetchProfileBuffer(conn, jid) {
+async function getBotImageBuffer() {
   try {
-    const getUrl =
-      typeof conn.profilePictureUrl === "function"
-        ? () => conn.profilePictureUrl(jid, "image").catch(() => null)
-        : () => Promise.resolve(null);
-    const url = await getUrl();
-    if (!url) return null;
-    const res = await axios.get(url, {
+    const res = await axios.get(BOT_IMAGE, {
       responseType: "arraybuffer",
       timeout: 20000,
     });
     return Buffer.from(res.data);
   } catch (e) {
-    console.error("[groupupdate] fetchProfileBuffer error:", e?.message || e);
+    console.error("[groupupdate] getBotImageBuffer error:", e?.message || e);
     return null;
-  }
-}
-
-async function getDefaultImageBuffer() {
-  try {
-    const res = await axios.get(DEFAULT_PROFILE_IMAGE, {
-      responseType: "arraybuffer",
-      timeout: 20000,
-    });
-    return Buffer.from(res.data);
-  } catch (e) {
-    console.error("[groupupdate] getDefaultImageBuffer error:", e?.message || e);
-    return null;
-  }
-}
-
-async function getParticipantProfile(conn, participantJid) {
-  try {
-    // Essayer d'abord de récupérer la photo de profil du participant
-    const profileBuffer = await fetchProfileBuffer(conn, participantJid);
-    if (profileBuffer) {
-      return profileBuffer;
-    }
-    
-    // Si pas de photo de profil, utiliser l'image par défaut
-    return await getDefaultImageBuffer();
-  } catch (e) {
-    console.error("[groupupdate] getParticipantProfile error:", e?.message || e);
-    return await getDefaultImageBuffer();
   }
 }
 
@@ -275,6 +240,9 @@ Module({ on: "group-participants.update" })(async (_msg, event, conn) => {
     const botJidFull = jidNormalizedUser(conn?.user?.id);
     const currentDate = formatDate();
 
+    // Récupérer l'image du bot une seule fois pour tous les participants
+    const botImageBuffer = await getBotImageBuffer();
+
     for (const p of event.participants) {
       const participantJid = jidNormalizedUser(typeof p === "string" ? p : p.id || p.jid || "");
       if (!participantJid) continue;
@@ -299,9 +267,7 @@ Module({ on: "group-participants.update" })(async (_msg, event, conn) => {
         const text = buildText(DEFAULT_WELCOME, replacements);
         
         try {
-          // Récupérer la photo de profil du participant (ou image par défaut)
-          const profileBuffer = await getParticipantProfile(conn, participantJid);
-          await sendWelcomeMsg(conn, groupJid, text, [participantJid], profileBuffer);
+          await sendWelcomeMsg(conn, groupJid, text, [participantJid], botImageBuffer);
         } catch (e) {
           console.error("[groupupdate] error sending welcome:", e?.message || e);
         }
@@ -326,9 +292,7 @@ Module({ on: "group-participants.update" })(async (_msg, event, conn) => {
         const text = buildText(DEFAULT_GOODBYE, replacements);
         
         try {
-          // Récupérer la photo de profil du participant (ou image par défaut)
-          const profileBuffer = await getParticipantProfile(conn, participantJid);
-          await sendWelcomeMsg(conn, groupJid, text, [participantJid], profileBuffer);
+          await sendWelcomeMsg(conn, groupJid, text, [participantJid], botImageBuffer);
         } catch (e) {
           console.error("[groupupdate] error sending goodbye:", e?.message || e);
         }
