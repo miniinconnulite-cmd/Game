@@ -12,8 +12,11 @@ Module({
 🌐 *GitHub Repository:*
 https://github.com/INCONNU-BOY/INCONNU-XD-V2
 
-🤖 *Telegram Bot:*
+🤖 *inconnu pair Telegram Bot:*
 @queen_akuma_bot
+
+🤝
+https://inconnu-xd-v2.vercel.app
 
 📱 *Features:*
 • Multi-device support
