@@ -1,17 +1,17 @@
-FROM node:20-alpine
+FROM node:18-alpine
 
-# Create working directory
 WORKDIR /app
 
-# Install dependencies first (better cache)
-COPY package*.json ./
-RUN npm install --only=production
+RUN apk add --no-cache \
+  python3 \
+  make \
+  g++ \
+  libc6-compat
 
-# Copy all bot files
+COPY package*.json ./
+
+RUN npm install
+
 COPY . .
 
-# Expose your bot port (if any)
-EXPOSE 3000
-
-# Start the bot
-CMD ["npm", "start"]
+CMD ["node", "index.js"]
