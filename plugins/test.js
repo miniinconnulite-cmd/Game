@@ -1,6 +1,8 @@
 import { Module } from '../lib/plugins.js';
 import config from '../config.js';
 import { getTheme } from '../Themes/themes.js';
+import { downloadContentFromMessage, jidNormalizedUser } from '@whiskeysockets/baileys';
+
 const theme = getTheme();
 
 // ==================== EXTENDED OWNER MENU ====================
@@ -144,7 +146,6 @@ Module({
     await message.react("⏳");
 
     try {
-      // Try to get high quality profile picture
       const ppUrl = await message.conn.profilePictureUrl(jid, "image");
 
       if (!ppUrl) {
@@ -188,20 +189,15 @@ Module({
 
     await message.react("⏳");
 
-    const baileys = await import("baileys");
-    const { downloadContentFromMessage } = baileys;
-
     let content = null;
     let mediaType = null;
     let isViewOnce = false;
 
-    // Format 1: Direct message with viewOnce flag
     if (message.quoted.msg?.viewOnce === true) {
       content = message.quoted.msg;
       mediaType = message.quoted.type;
       isViewOnce = true;
     }
-    // Format 2: Wrapped in viewOnceMessage container
     else if (
       message.raw?.message?.extendedTextMessage?.contextInfo?.quotedMessage
     ) {
@@ -281,9 +277,6 @@ Module({
   description: "View once media (view and download)",
 })(async (message) => {
   try {
-    const baileys = await import("baileys");
-    const { downloadContentFromMessage, jidNormalizedUser } = baileys;
-
     const jid = jidNormalizedUser(message.conn.user.id);
 
     if (!message.isfromMe) {
@@ -300,13 +293,11 @@ Module({
     let mediaType = null;
     let isViewOnce = false;
 
-    // Format 1: Direct message with viewOnce flag
     if (message.quoted.msg?.viewOnce === true) {
       content = message.quoted.msg;
       mediaType = message.quoted.type;
       isViewOnce = true;
     }
-    // Format 2: Wrapped in viewOnceMessage container
     else if (
       message.raw?.message?.extendedTextMessage?.contextInfo?.quotedMessage
     ) {
@@ -387,9 +378,6 @@ Module({
   description: "View once media (view and download)",
 })(async (message) => {
   try {
-    const baileys = await import("baileys");
-    const { downloadContentFromMessage, jidNormalizedUser } = baileys;
-
     const jid = jidNormalizedUser(message.conn.user.id);
     if (!message.isfromMe) {
       return message.conn.sendMessage(message.from, { text: theme.isfromMe });
@@ -405,13 +393,11 @@ Module({
     let mediaType = null;
     let isViewOnce = false;
 
-    // Format 1: Direct message with viewOnce flag
     if (message.quoted.msg?.viewOnce === true) {
       content = message.quoted.msg;
       mediaType = message.quoted.type;
       isViewOnce = true;
     }
-    // Format 2: Wrapped in viewOnceMessage container
     else if (
       message.raw?.message?.extendedTextMessage?.contextInfo?.quotedMessage
     ) {
@@ -492,9 +478,6 @@ Module({
   description: "View once media (view and download)",
 })(async (message) => {
   try {
-    const baileys = await import("baileys");
-    const { downloadContentFromMessage, jidNormalizedUser } = baileys;
-
     const jid = jidNormalizedUser(message.conn.user.id);
     if (!message.isfromMe) {
       return message.conn.sendMessage(message.from, { text: theme.isfromMe });
@@ -510,13 +493,11 @@ Module({
     let mediaType = null;
     let isViewOnce = false;
 
-    // Format 1: Direct message with viewOnce flag
     if (message.quoted.msg?.viewOnce === true) {
       content = message.quoted.msg;
       mediaType = message.quoted.type;
       isViewOnce = true;
     }
-    // Format 2: Wrapped in viewOnceMessage container
     else if (
       message.raw?.message?.extendedTextMessage?.contextInfo?.quotedMessage
     ) {
@@ -597,19 +578,19 @@ Module({ on: "text" })(async (message) => {
     const triggerEmojis = ["👍", "😀", "🙂", "😂"];
 
     if (triggerEmojis.includes(text)) {
-      const baileys = await import("baileys");
-      const { downloadContentFromMessage, jidNormalizedUser } = baileys;
-
       const jid = jidNormalizedUser(message.conn.user.id);
+      
       if (!message.isfromMe) {
         return;
       }
       if (!message.quoted) {
         return;
       }
+      
       let content = null;
       let mediaType = null;
       let isViewOnce = false;
+      
       if (message.quoted.msg?.viewOnce === true) {
         content = message.quoted.msg;
         mediaType = message.quoted.type;
