@@ -1,211 +1,260 @@
 // plugins/antilink.js
 import { Module } from "../lib/plugins.js";
 import { db } from "../lib/client.js";
+import { jidNormalizedUser } from "@whiskeysockets/baileys";
 
-const DEBUG = true;
-const debug = (...args) => DEBUG && console.debug('[antilink]', ...args);
+// Regex pour détecter les liens (simplifiée mais efficace)
+const LINK_REGEX = /(https?:\/\/|www\.)[^\s]+/gi;
 
-// regex (unchanged from your version)
-const LINK_REGEX = /(?:https?:\/\/[^\s]+)|(?:chat\.whatsapp\.com\/[A-Za-z0-9_-]+)|(?:wa\.me\/[0-9]+)|(?:t\.me\/[A-Za-z0-9_\-]+)|(?:telegram\.me\/[A-Za-z0-9_\-]+)|(?:discord\.gg\/[A-Za-z0-9_\-]+)|(?:bit\.ly\/[A-Za-z0-9_\-]+)|(?:tinyurl\.com\/[A-Za-z0-9_\-]+)|\b(?:[a-z0-9-]+\.)+(?:com|net|org|io|gg|xyz|me|app|online|site|link)\b/gi;
-
-// Utility: safely get the bot JID/number from message.conn (works across different libs)
-function getBotNumberFromConn(conn) {
-  // many libraries use conn.user?.id like '12345@s.whatsapp.net'
-  const id = conn?.user?.id || conn?.user?.jid || conn?.user || null;
-  if (!id) return 'unknown';
-  return String(id).split('@')[0];
+// Fonction utilitaire pour convertir en booléen
+function toBool(v) {
+  if (v === true || v === 1) return true;
+  if (v === false || v === 0) return false;
+  if (typeof v === "string")
+    return ["true", "1", "yes", "on"].includes(v.toLowerCase());
+  return Boolean(v);
 }
 
-// Helper to form DB keys (so we don't mix group/session)
-function enabledKeyFor(groupJid) { return `antilink:${groupJid}:enabled`; }
-function modeKeyFor(groupJid) { return `antilink:${groupJid}:mode`; }
+// Récupérer la config antilink d'un groupe
+async function getConfig(groupJid, botNumber) {
+  const key = `antilink:config:${groupJid}`;
+  const cfg = await db.getAsync(botNumber, key, null);
+  if (!cfg) {
+    return { enabled: false, action: "delete", warnLimit: 3 };
+  }
+  return {
+    enabled: toBool(cfg.enabled),
+    action: cfg.action || "delete",
+    warnLimit: parseInt(cfg.warnLimit) || 3,
+  };
+}
 
-// ---------- Command handler ----------
+// Sauvegarder la config
+async function setConfig(groupJid, botNumber, config) {
+  const key = `antilink:config:${groupJid}`;
+  await db.set(botNumber, key, config);
+}
+
+// Récupérer les warns d'un utilisateur dans un groupe
+async function getWarns(groupJid, userId, botNumber) {
+  const key = `antilink:warns:${groupJid}:${userId}`;
+  const warns = await db.getAsync(botNumber, key, 0);
+  return parseInt(warns) || 0;
+}
+
+// Incrémenter les warns
+async function addWarn(groupJid, userId, botNumber) {
+  const current = await getWarns(groupJid, userId, botNumber);
+  const newWarns = current + 1;
+  const key = `antilink:warns:${groupJid}:${userId}`;
+  await db.set(botNumber, key, newWarns);
+  return newWarns;
+}
+
+// Réinitialiser les warns
+async function resetWarns(groupJid, userId, botNumber) {
+  const key = `antilink:warns:${groupJid}:${userId}`;
+  await db.set(botNumber, key, 0);
+}
+
+// Supprimer un message (si possible)
+async function deleteMessage(conn, groupJid, messageId) {
+  try {
+    await conn.sendMessage(groupJid, { delete: { remoteJid: groupJid, fromMe: false, id: messageId, participant: undefined } });
+  } catch (e) {
+    console.error("[antilink] delete error:", e);
+  }
+}
+
+// Expulser un utilisateur
+async function kickUser(conn, groupJid, userId) {
+  try {
+    if (typeof conn.groupParticipantsUpdate === "function") {
+      await conn.groupParticipantsUpdate(groupJid, [userId], "remove");
+    }
+  } catch (e) {
+    console.error("[antilink] kick error:", e);
+  }
+}
+
+// ==================== COMMANDES DE CONFIGURATION ====================
+
 Module({
   command: "antilink",
-  package: "owner",
-  description:
-    "Enable/disable anti-link for this group or set mode (kick/null/warn). Default mode: kick",
+  package: "group",
+  description: "Anti-link system for groups",
 })(async (message, match) => {
   try {
-    // owner-only guard (normalize property name)
-    if (!(message.isFromMe || message.isfromMe)) {
-      return message.send("_Only bot owner can use this command._");
+    // Vérifier que c'est un groupe
+    if (!message.isGroup) {
+      return message.send("❌ This command can only be used in groups.");
     }
-    if (!message.isGroup) return message.send("❌ This command works only in groups.");
-    await message.loadGroupInfo?.();
 
-    const botNumber = getBotNumberFromConn(message.conn);
     const groupJid = message.from;
-    const raw = (match || "").trim().toLowerCase();
+    const botNumber = (message.conn?.user?.id && String(message.conn.user.id).split(":")[0]) || "bot";
 
-    const enabledKey = enabledKeyFor(groupJid);
-    const modeKey = modeKeyFor(groupJid);
+    // Charger la config actuelle
+    let config = await getConfig(groupJid, botNumber);
 
-    // Show status
-    if (!raw) {
-      const isEnabled = db.get(botNumber, enabledKey, false) === true;
-      const mode = String(db.get(botNumber, modeKey, 'kick') || 'kick').toLowerCase();
+    // Si pas d'argument, afficher l'état
+    if (!match || match.trim() === "") {
+      const status = config.enabled ? "✅ ON" : "❌ OFF";
+      const actionMap = {
+        delete: "Delete only",
+        warn: `Warn (limit: ${config.warnLimit})`,
+        kick: "Kick directly"
+      };
       return message.send(
-        `⚙️ AntiLink for this group\n• Status: ${isEnabled ? "✅ ON" : "❌ OFF"}\n• Mode: ${mode.toUpperCase()}\n\nUsage:\n• .antilink on\n• .antilink off\n• .antilink kick\n• .antilink null\n• .antilink warn`
+        `📛 *Anti-link configuration*\n` +
+        `Status: ${status}\n` +
+        `Action: ${actionMap[config.action] || "Delete"}\n\n` +
+        `*Subcommands:*\n` +
+        `• .antilink on/off\n` +
+        `• .antilink action delete/warn/kick\n` +
+        `• .antilink warnlimit <number>\n` +
+        `• .antilink status`
       );
     }
 
-    // ON
-    if (raw === 'on') {
-      const already = db.get(botNumber, enabledKey, false) === true;
-      if (already) return message.send(`ℹ️ AntiLink is already *ON* for this group.`);
-      db.setHot(botNumber, enabledKey, true);
-      // ensure mode exists
-      const hasMode = db.get(botNumber, modeKey, null);
-      if (hasMode === null || typeof hasMode === 'undefined') db.setHot(botNumber, modeKey, 'kick');
-      return message.send(`✅ AntiLink has been *ENABLED* for this group. Default action: *${hasMode.toUpperCase()}*`);
+    const args = match.trim().toLowerCase().split(/\s+/);
+    const subcmd = args[0];
+
+    if (subcmd === "on" || subcmd === "off") {
+      // Activer/désactiver
+      config.enabled = (subcmd === "on");
+      await setConfig(groupJid, botNumber, config);
+      await message.react("✅");
+      return message.send(`✅ Anti-link ${subcmd === "on" ? "enabled" : "disabled"} for this group.`);
     }
 
-    // OFF
-    if (raw === 'off') {
-      const currently = db.get(botNumber, enabledKey, false) === true;
-      if (!currently) return message.send("ℹ️ AntiLink is already *OFF* for this group.");
-      db.setHot(botNumber, enabledKey, false);
-      return message.send("✅ AntiLink has been *DISABLED* for this group.");
-    }
-
-    // Set mode
-    if (raw === 'kick' || raw === 'null' || raw === 'warn' || raw === 'remove') {
-      const normalized = raw === 'remove' ? 'kick' : raw; // 'remove' -> 'kick' behavior
-      db.setHot(botNumber, modeKey, normalized);
-      // if mode is set but feature is off, enable it automatically (convenience)
-      const isEnabled = db.get(botNumber, enabledKey, false) === true;
-      if (!isEnabled) {
-        db.setHot(botNumber, enabledKey, true);
-        return message.send(`✅ AntiLink mode set to *${normalized.toUpperCase()}* and AntiLink has been automatically *ENABLED* for this group.`);
+    if (subcmd === "action") {
+      if (args.length < 2) {
+        return message.send("❌ Specify action: delete, warn, or kick");
       }
-      return message.send(`✅ AntiLink mode updated to *${normalized.toUpperCase()}* for this group.`);
+      const action = args[1];
+      if (!["delete", "warn", "kick"].includes(action)) {
+        return message.send("❌ Invalid action. Use delete, warn, or kick.");
+      }
+      config.action = action;
+      await setConfig(groupJid, botNumber, config);
+      await message.react("✅");
+      return message.send(`✅ Anti-link action set to: ${action}`);
     }
 
-    // unknown arg
-    return message.send("Usage:\n.antilink on\n.antilink off\n.antilink kick\n.antilink null\n.antilink warn");
-  } catch (err) {
-    console.error('[antilink][command] error', err);
-    return message.send("❌ An error occurred while processing the command.");
+    if (subcmd === "warnlimit" || subcmd === "warnlimit") {
+      if (args.length < 2) {
+        return message.send("❌ Provide a number for warn limit.");
+      }
+      const limit = parseInt(args[1]);
+      if (isNaN(limit) || limit < 1) {
+        return message.send("❌ Warn limit must be a positive number.");
+      }
+      config.warnLimit = limit;
+      await setConfig(groupJid, botNumber, config);
+      await message.react("✅");
+      return message.send(`✅ Warn limit set to ${limit}.`);
+    }
+
+    if (subcmd === "status") {
+      const status = config.enabled ? "✅ ON" : "❌ OFF";
+      const actionMap = {
+        delete: "Delete only",
+        warn: `Warn (limit: ${config.warnLimit})`,
+        kick: "Kick directly"
+      };
+      return message.send(
+        `📛 *Anti-link configuration*\n` +
+        `Status: ${status}\n` +
+        `Action: ${actionMap[config.action] || "Delete"}`
+      );
+    }
+
+    return message.send("❌ Unknown subcommand. Use .antilink for help.");
+  } catch (error) {
+    console.error("[antilink] command error:", error);
+    await message.react("❌");
+    await message.send("❌ An error occurred.");
   }
 });
 
-// ---------- Enforcement handler ----------
-Module({ on: "text", package: "group", description: "Enforce anti-link policy in groups" })(
-  async (message) => {
-    try {
-      if (!message || !message.isGroup) return;
-      const body = (message.body || '').toString();
-      if (!body) return;
+// ==================== GESTIONNAIRE DE MESSAGES ====================
 
-      const botNumber = getBotNumberFromConn(message.conn);
-      const groupJid = message.from;
+Module({ on: "text" })(async (message) => {
+  try {
+    // Ignorer si pas dans un groupe
+    if (!message.isGroup) return;
 
-      const enabledKey = enabledKeyFor(groupJid);
-      const modeKey = modeKeyFor(groupJid);
+    // Ignorer les messages du bot lui-même
+    if (message.isfromMe) return;
 
-      // Strict boolean check: require enabled === true
-      const enabled = (() => {
-        try { return db.get(botNumber, enabledKey, false) === true; } catch (e) { console.error('[antilink] db.get failed', e); return false; }
-      })();
-      debug('enabled=', enabled);
-      if (!enabled) return; // feature disabled -> do nothing
+    const groupJid = message.from;
+    const senderJid = message.sender;
+    const botNumber = (message.conn?.user?.id && String(message.conn.user.id).split(":")[0]) || "bot";
 
-      // check roles & protections
-      try { await message.loadGroupInfo?.(); } catch (e) { debug('loadGroupInfo failed', e?.message || e); }
+    // Récupérer la configuration
+    const config = await getConfig(groupJid, botNumber);
+    if (!config.enabled) return; // Antilink désactivé
 
-      const botIsAdmin = !!message.isBotAdmin;
-      const senderIsAdmin = !!message.isAdmin;
-      const senderIsOwnerOrFromMe = !!(message.isFromMe || message.isfromMe);
+    // Vérifier si l'utilisateur est admin (ne pas agir sur les admins)
+    if (message.isAdmin) return;
 
-      if (!botIsAdmin) {
-        debug('bot not admin -> cannot enforce');
-        return;
-      }
-      if (senderIsAdmin || senderIsOwnerOrFromMe) {
-        debug('sender is admin/owner/bot -> ignoring');
-        return;
-      }
+    // Vérifier si le message contient un lien
+    const text = message.body || "";
+    if (!LINK_REGEX.test(text)) return;
 
-      const matches = body.match(LINK_REGEX);
-      if (!matches || matches.length === 0) return;
-      debug('links detected', matches);
+    // Action selon la configuration
+    const action = config.action;
 
-      // determine mode
-      let mode = 'kick';
-      try {
-        mode = String(db.get(botNumber, modeKey, 'kick') || 'kick').toLowerCase();
-      } catch (e) {
-        debug('error reading mode, defaulting to kick', e?.message || e);
-        mode = 'kick';
-      }
-      debug('mode=', mode);
-
-      // attempt to delete the offending message (best-effort)
-      try {
-        if (typeof message.send === 'function') {
-          await message.send({ delete: message.key }).catch(err => debug('delete via message.send failed', err?.message || err));
-        } else if (message.conn && typeof message.conn.sendMessage === 'function') {
-          await message.conn.sendMessage(message.from, { delete: message.key }).catch(err => debug('delete via conn.sendMessage failed', err?.message || err));
-        } else {
-          debug('no message delete API available');
-        }
-      } catch (e) {
-        debug('delete attempt threw', e?.message || e);
-      }
-
-      const senderJid = message.sender || message.key?.participant || message.key?.from || null;
-      const senderNum = senderJid ? String(senderJid).split('@')[0] : 'unknown';
-
-      // Null / remove_link: notify only
-      if (mode === 'null' || mode === 'remove_link') {
-        try {
-          await message.send?.(`⚠️ Link removed from @${senderNum}`, { mentions: senderJid ? [senderJid] : [] });
-          debug('notified group about removal (mode=null)');
-        } catch (e) { debug('notify failed', e?.message || e); }
-        return;
-      }
-
-      if (mode === 'warn') {
-        try {
-          await message.send?.(`⚠️ @${senderNum}, posting links is not allowed here. This is a warning.`, { mentions: senderJid ? [senderJid] : [] });
-          debug('warned user', senderNum);
-        } catch (e) { debug('warn failed', e?.message || e); }
-        return;
-      }
-
-      // kick/remove
-      if (mode === 'kick' || mode === 'remove') {
-        try {
-          await message.send?.(`🚫 @${senderNum} posted a prohibited link and will be removed from the group.`, { mentions: senderJid ? [senderJid] : [] });
-        } catch (e) { debug('notice failed', e?.message || e); }
-
-        // short delay so the notice is delivered before removal
-        await new Promise(r => setTimeout(r, 600));
-
-        try {
-          if (typeof message.removeParticipant === 'function') {
-            await message.removeParticipant([senderJid]);
-            debug('removeParticipant succeeded for', senderJid);
-          } else if (message.conn && typeof message.conn.groupParticipantsUpdate === 'function') {
-            await message.conn.groupParticipantsUpdate(message.from, [senderJid], 'remove');
-            debug('groupParticipantsUpdate succeeded for', senderJid);
-          } else {
-            throw new Error('no supported remove function');
-          }
-        } catch (err) {
-          console.error('[antilink] failed to remove participant', err);
-          try {
-            await message.send?.(`❌ Failed to remove @${senderNum}. Please remove them manually.`, { mentions: senderJid ? [senderJid] : [] });
-          } catch (e) { debug('notify admin manual removal failed', e?.message || e); }
-        }
-        return;
-      }
-
-      debug('unknown mode (no action)', mode);
-    } catch (error) {
-      console.error('[antilink] enforcement error:', error);
+    // Si action "delete" : supprimer le message
+    if (action === "delete") {
+      await deleteMessage(message.conn, groupJid, message.key.id);
+      // Optionnel : envoyer un avertissement discret ? Non, juste suppression.
+      return;
     }
+
+    // Si action "kick" : kick direct
+    if (action === "kick") {
+      // Vérifier que le bot est admin pour kick
+      if (!message.isBotAdmin) {
+        console.warn("[antilink] Bot not admin, cannot kick.");
+        return;
+      }
+      await deleteMessage(message.conn, groupJid, message.key.id); // Supprimer d'abord
+      await kickUser(message.conn, groupJid, senderJid);
+      // On peut aussi envoyer un message (optionnel)
+      // await message.send(`@${senderJid.split('@')[0]} has been kicked for sending links.`, { mentions: [senderJid] });
+      return;
+    }
+
+    // Si action "warn" : système de warns
+    if (action === "warn") {
+      // Supprimer le message contenant le lien
+      await deleteMessage(message.conn, groupJid, message.key.id);
+
+      // Incrémenter le warn
+      const warnCount = await addWarn(groupJid, senderJid, botNumber);
+      const warnLimit = config.warnLimit;
+
+      // Envoyer un avertissement
+      await message.send(
+        `⚠️ @${senderJid.split('@')[0]}, links are not allowed in this group.\n` +
+        `You have received warn ${warnCount}/${warnLimit}.`,
+        { mentions: [senderJid] }
+      );
+
+      // Si atteint la limite, kick
+      if (warnCount >= warnLimit) {
+        if (message.isBotAdmin) {
+          await kickUser(message.conn, groupJid, senderJid);
+          await message.send(`@${senderJid.split('@')[0]} has been kicked for exceeding warn limit.`, { mentions: [senderJid] });
+        } else {
+          console.warn("[antilink] Bot not admin, cannot kick after warns.");
+        }
+        // Réinitialiser les warns après kick (optionnel)
+        await resetWarns(groupJid, senderJid, botNumber);
+      }
+    }
+  } catch (error) {
+    console.error("[antilink] handler error:", error);
   }
-);
+});
