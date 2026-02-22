@@ -1,5 +1,5 @@
 import { Module } from "../lib/plugins.js";
-import { getSettings } from "../../Database/config.js";
+import { getSettings } from "../config.js";
 
 Module({
   command: "gstatus",
