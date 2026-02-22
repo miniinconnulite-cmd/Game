@@ -209,14 +209,13 @@ Module({
   try {
     const message = text || "📢 Everyone has been tagged!";
     const mentions = m.groupParticipants.map((p) => p.id);
-    
-    const botImageBuffer = await getBotImageBuffer();
-    
-    await m.send({ 
-      image: botImageBuffer, 
-      caption: message, 
-      mentions 
+
+    // ✅ Envoi sans image
+    await m.send({
+      text: message,
+      mentions
     });
+
     await m.react("👻");
   } catch (err) {
     await m.reply("❌ Error: " + err.message);
