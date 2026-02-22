@@ -16,7 +16,7 @@ https://github.com/INCONNU-BOY/INCONNU-XD-V2
 @queen_akuma_bot
 
 🤝 *INCONNU PAIR WEB*
-https://inconnu-xd-v2.vercel.app
+https://mini-xd.vercel.app
 
 📱 *Features:*
 • Multi-device support
